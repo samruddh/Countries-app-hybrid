@@ -13,6 +13,7 @@ import Home from './src/Home';
 import Exit from './src/Exit';
 import About from './src/About';
 import Splash from './src/Splash';
+import About1 from './src/About1';
 
 const HomeNavigator = createStackNavigator(
   {
@@ -27,6 +28,12 @@ const HomeNavigator = createStackNavigator(
       )
     })},
     'About': {screen: About},
+
+    'Language': {screen:About1,
+      navigationOptions: {
+        gestureEnabled: false,
+      },
+    }
   },
   {
     initialRouteName : 'Home'

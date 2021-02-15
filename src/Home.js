@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {View, Text, StyleSheet, Button, TouchableOpacity,FlatList,Image} from 'react-native';
+import {View, Text, StyleSheet, Button, TouchableOpacity,FlatList,Image, Alert, BackHandler } from 'react-native';
 import {WebView} from 'react-native-webview'
 import { openDatabase } from 'react-native-sqlite-storage';
 
@@ -13,6 +13,8 @@ export default class Home extends Component {
     countrydb:[]
   }
   async componentDidMount() {
+  BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
+
   try {
     const response = await fetch('https://restcountries.eu/rest/v2/all');
     const data = await response.json();
@@ -33,6 +35,8 @@ export default class Home extends Component {
         }
       );
     });
+
+    
 
     db.transaction((tx) => {
       for (let i = 0; i < this.state.country.length; i++) {
@@ -73,7 +77,7 @@ export default class Home extends Component {
 
     db.transaction((tx) => {
       tx.executeSql(
-        'SELECT * from table_user',
+        'SELECT DISTINCT region FROM table_user',
         [],
         (tx, results) => {
           var temp = [];
@@ -82,19 +86,46 @@ export default class Home extends Component {
 
           this.setState({
             countrydb: temp,
+            
           });
         },
       );
     });
+    
   }
-
-     catch(err) {
+    catch(err) {
         console.log("Error fetching data-----------", err);
     }
   }
 
-  
+  componentWillUnmount() {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackPress);
+  }
 
+  handleBackPress = () => {
+
+    this.props.navigation.navigate('HomePage');
+
+     const names =  this.props.navigation.routeName;
+    console.log('names', names);
+
+    Alert.alert(
+      'Exit App',
+      'Do you want to exit?',
+      [
+        {
+          text: 'No',
+          onPress: () => console.log('Cancel Pressed'),
+          style: 'cancel',
+        },
+        {text: 'Yes', onPress: () => BackHandler.exitApp()},
+      ],
+      {cancelable: false},
+    );
+    return true; 
+  };
+  
+  
   static navigationOptions = {
     title : "Continents in the world!"
   }
@@ -105,24 +136,18 @@ export default class Home extends Component {
     return (
       <View>
         <FlatList
-          data={[
-            {key: 'Asia'},
-            {key: 'Europe'},
-            {key: 'Africa'},
-            {key: 'Oceania'},
-            {key: 'Americas'},
-            {key: 'Polar'}
-          ]}
+          data={[{key: 'Asia'},{key: 'Europe'},{key: 'Africa'},{key: 'Oceania'},{key: 'Americas'},{key: 'Polar'}]}
           renderItem={({item}) => {
               return(
-                <TouchableOpacity style={styles.container} onPress={()=> this.props.navigation.navigate('About',{P1:item.key})}>
+                <TouchableOpacity style={styles.container} onPress={()=> this.props.navigation.navigate('About',{data:item.key})}>
                   <View style={{marginLeft:35,marginTop:35,marginBottom:35}}>
-                  <Text>{item.key}</Text>
+                  <Text style={{fontSize:20}}>{item.key}</Text>
                   </View>
                 </TouchableOpacity>
               )
             }
           }
+          
         />
       </View>
     );
@@ -139,6 +164,7 @@ const styles = StyleSheet.create({
     marginLeft:10,
     marginRight:10,
     borderWidth:1,
+    
     borderRadius: 6,
     backgroundColor: "#99D19C",
     borderColor: "#20232a",
